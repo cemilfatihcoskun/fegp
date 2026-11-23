@@ -1,0 +1,9 @@
+LaunchTargetManager/org.eclipse.cdt.docker.launcher.launchTargetType.container,[mysql_5.7]/arch=x86_64
+LaunchTargetManager/org.eclipse.cdt.docker.launcher.launchTargetType.container,[mysql_5.7]/connection_uri=unix\:///var/run/docker.sock
+LaunchTargetManager/org.eclipse.cdt.docker.launcher.launchTargetType.container,[mysql_5.7]/image_id=mysql\:5.7
+LaunchTargetManager/org.eclipse.cdt.docker.launcher.launchTargetType.container,[mysql_5.7]/name=[mysql_5.7]
+LaunchTargetManager/org.eclipse.cdt.docker.launcher.launchTargetType.container,[mysql_5.7]/os=linux-container
+LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/arch=x86_64
+LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/name=Local
+LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/os=linux
+eclipse.preferences.version=1
