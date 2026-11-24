@@ -1,53 +1,62 @@
 package com.fatih.fegp.citizen.application;
 
-import org.springframework.stereotype.Service;
-
 import com.fatih.fegp.citizen.domain.Citizen;
+import com.fatih.fegp.citizen.domain.CitizenErrors;
 import com.fatih.fegp.citizen.domain.CitizenRepository;
 import com.fatih.fegp.citizen.domain.CitizenStatus;
+import org.springframework.stereotype.Service;
 
 @Service
 public class CitizenService {
-    private final CitizenRepository repository;
-    
-    public CitizenService(CitizenRepository repository) {
-	this.repository = repository;
-    }
-    
-    public Citizen registerCitizen(long nationalId, String name) {
-	if (repository.existsByNationalId(nationalId)) {
-	    throw new IllegalStateException("Citizen with nationalId already exists.");
-	}
-	Citizen citizen = Citizen.register(nationalId, name);
-	return repository.save(citizen);
-    }
-    
-    public Citizen findById(long id) {
-	Citizen citizen = repository.findById(id);
-	if (citizen == null) {
-	    throw new IllegalArgumentException("Citizen with id is not found.");
-	}
-	return citizen;
+    private final CitizenRepository citizenRepository;
+
+    public CitizenService(CitizenRepository citizenRepository) {
+        this.citizenRepository = citizenRepository;
     }
 
-    public Citizen findByNationalId(long nationalId) {
-	Citizen citizen = repository.findByNationalId(nationalId);
-	if (citizen == null) {
-	    throw new IllegalArgumentException("Citizen with id is not found.");
-	}
-	return citizen;
+    public Citizen register(long citizenId, String name, String status) {
+        Citizen citizen = new Citizen(citizenId, name, status);
     }
-    
-    public Citizen suspend(long id) {
-	Citizen citizen = findById(id);
-	citizen.suspend();
-	return repository.save(citizen);
+
+    public Citizen save(Citizen citizen) {
+        long citizenId = citizen.getCitizenId();
+        if (citizenRepository.existsByCitizenId(citizenId)) {
+            throw new CitizenErrors.CitizenAlreadyExists(citizenId);
+        }
+        return citizenRepository.save(citizen);
     }
-    
-    public Citizen activate(long id) {
-	Citizen citizen = findById(id);
-	citizen.activate();
-	return repository.save(citizen);
+
+    public Citizen findByCitizenId(long citizenId) {
+        Citizen citizen = citizenRepository.findByCitizenId(citizenId);
+        if (citizen == null) {
+            throw new CitizenErrors.CitizenNotFound(citizenId);
+        }
+        return citizen;
+    }
+
+    public Citizen removeByCitizenId(long citizenId) {
+        if (!citizenRepository.existsByCitizenId(citizenId)) {
+            throw new CitizenErrors.CitizenNotFound(citizenId);
+        }
+        return citizenRepository.removeByCitizenId(citizenId);
+    }
+
+    public Citizen suspend(long citizenId) {
+        Citizen citizen = citizenRepository.findByCitizenId(citizenId);
+        if (citizen == null) {
+            throw new CitizenErrors.CitizenNotFound(citizenId);
+        }
+        citizen.setStatus(CitizenStatus.SUSPENDED);
+        return citizenRepository.save(citizen);
+    }
+
+    public Citizen activate(long citizenId) {
+        Citizen citizen = citizenRepository.findByCitizenId(citizenId);
+        if (citizen == null) {
+            throw new CitizenErrors.CitizenNotFound(citizenId);
+        }
+        citizen.setStatus(CitizenStatus.ACTIVE);
+        return citizenRepository.save(citizen);
     }
 }
 

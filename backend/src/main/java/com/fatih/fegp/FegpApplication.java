@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class FegpApplication {
 
     public static void main(String[] args) {
-	SpringApplication.run(FegpApplication.class, args);
+        SpringApplication.run(FegpApplication.class, args);
     }
 
 }

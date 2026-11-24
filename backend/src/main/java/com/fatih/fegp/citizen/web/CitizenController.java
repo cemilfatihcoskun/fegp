@@ -1,70 +1,43 @@
 package com.fatih.fegp.citizen.web;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.fatih.fegp.citizen.application.CitizenService;
 import com.fatih.fegp.citizen.domain.Citizen;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/citizens")
 public class CitizenController {
-    private final CitizenService service;
+    private final CitizenService citizenService;
 
-    public CitizenController(CitizenService service) {
-	this.service = service;
+    public CitizenController(CitizenService citizenService) {
+        this.citizenService = citizenService;
     }
 
     @PostMapping
-    public ResponseEntity<CitizenResponse> register(@RequestBody RegisterCitizenRequest request) {
-	if (request == null) {
-	    return ResponseEntity.badRequest().build();
-	}
-        Citizen citizen = service.registerCitizen(request.nationalId(), request.name());
-        if (citizen == null) {
-            return ResponseEntity.internalServerError().build();
+    public ResponseEntity<CitizenResponse> save(@RequestBody RegisterCitizenRequest request) {
+        if (request == null) {
+            return ResponseEntity.badRequest().build();
         }
-	return ResponseEntity.ok(CitizenResponse.from(citizen));
+        Citizen savedCitizen = citizenService.save();
+        return ResponseEntity.ok(CitizenResponse.from(savedCitizen));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<CitizenResponse> findById(@PathVariable long id) {
-	Citizen citizen = service.findById(id);
-	if (citizen == null) {
-	    return ResponseEntity.notFound().build();
-	}
-	return ResponseEntity.ok(CitizenResponse.from(citizen));
+    @GetMapping("/{citizenId}")
+    public ResponseEntity<CitizenResponse> findByCitizenId(@PathVariable long citizenId) {
+        Citizen citizen = citizenService.findByCitizenId(citizenId);
+        return ResponseEntity.ok(CitizenResponse.from(citizen));
     }
 
-    @GetMapping("/nationalId/{nationalId}")
-    public ResponseEntity<CitizenResponse> findByNationalId(@PathVariable long nationalId) {
-	Citizen citizen = service.findByNationalId(nationalId);
-	if (citizen == null) {
-	    return ResponseEntity.notFound().build();
-	}
-	return ResponseEntity.ok(CitizenResponse.from(citizen));
+    @GetMapping("/suspend/{citizenId}")
+    public ResponseEntity<CitizenResponse> suspendByCitizenId(@PathVariable long citizenId) {
+        Citizen citizen = citizenService.suspend(citizenId);
+        return ResponseEntity.ok(CitizenResponse.from(citizen));
     }
 
-    @GetMapping("/suspend/{id}")
-    public ResponseEntity<CitizenResponse> suspend(@PathVariable long id) {
-	Citizen citizen = service.suspend(id);
-	if (citizen == null) {
-	    return ResponseEntity.notFound().build();
-	}
-	return ResponseEntity.ok(CitizenResponse.from(citizen));
-    }
-
-    @GetMapping("/activate/{id}")
-    public ResponseEntity<CitizenResponse> activatae(@PathVariable long id) {
-	Citizen citizen = service.activate(id);
-	if (citizen == null) {
-	    return ResponseEntity.notFound().build();
-	}
-	return ResponseEntity.ok(CitizenResponse.from(citizen));
+    @GetMapping("/activate/{citizenId}")
+    public ResponseEntity<CitizenResponse> activateByCitizenId(@PathVariable long citizenId) {
+        Citizen citizen = citizenService.activate(citizenId);
+        return ResponseEntity.ok(CitizenResponse.from(citizen));
     }
 }

@@ -1,58 +1,63 @@
 package com.fatih.fegp.citizen.domain;
 
 public class Citizen {
-    private final long id;
-    private final long nationalId;
+    private final long citizenId;
     private String name;
     private CitizenStatus status;
 
-    public Citizen(long id, long nationalId, String name, CitizenStatus status) {
-	this.id = id;
-	this.nationalId = nationalId;
-	this.name = name;
-	this.status = status;
+    public Citizen(long citizenId, String name, CitizenStatus status) {
+        if (!Citizen.validateCitizenId(citizenId)) {
+            throw new CitizenErrors.CitizenInvalidCitizenId(citizenId);
+        }
+
+        this.citizenId = citizenId;
+        this.name = name;
+        this.status = status;
     }
 
-    public final long getId() {
-	return id;
+    public Citizen(long citizenId, String name, String status) {
+        if (!Citizen.validateCitizenId(citizenId)) {
+            throw new CitizenErrors.CitizenInvalidCitizenId(citizenId);
+        }
+
+        this.citizenId = citizenId;
+        this.name = name;
+
+        // Check invalid state string or blank string
+        try {
+            this.status = CitizenStatus.valueOf(status);
+        } catch (IllegalArgumentException exception) {
+            throw new CitizenErrors.CitizenInvalidStatus(status);
+        } catch (NullPointerException exception) {
+            throw new CitizenErrors.CitizenInvalidStatus("Blank");
+        }
     }
 
-    public final long getNationalId() {
-	return nationalId;
+    public final long getCitizenId() {
+        return citizenId;
     }
 
     public String getName() {
-	return name;
+        return name;
     }
 
     public void setName(String name) {
-	this.name = name;
+        if (name.isBlank()) {
+            throw new CitizenErrors.CitizenNameBlank();
+        }
+        this.name = name;
     }
 
     public CitizenStatus getStatus() {
-	return status;
-    }
-
-    public boolean isActive() {
-	return status == CitizenStatus.ACTIVE;
+        return status;
     }
 
     public void setStatus(CitizenStatus status) {
-	this.status = status;
+        this.status = status;
     }
 
-    public void suspend() {
-	if (this.status == CitizenStatus.SUSPENDED) {
-	    throw new IllegalStateException("The citizen is already suspended.");
-	}
-	setStatus(CitizenStatus.SUSPENDED);
-    }
-
-    public void activate() {
-	if (this.status == CitizenStatus.ACTIVE) {
-	    throw new IllegalStateException("The citizen is already active.");
-	}
-	setStatus(CitizenStatus.ACTIVE);
+    public boolean isActive() {
+        return status == CitizenStatus.ACTIVE;
     }
 
     /**
@@ -65,34 +70,29 @@ public class Citizen {
      * @param id 11 digit national identity number
      * @return true if the national id is valid
      */
-    public boolean validateNationalId(long id) {
-	if (id < 10_000_000_000L || id > 99_999_999_999L) {
-	    return false;
-	    // throw new IllegalArgumentException("National identity number is not valid.");
-	}
+    public static boolean validateCitizenId(long id) {
+        if (id < 10_000_000_000L || id > 99_999_999_999L) {
+            return false;
+        }
 
-	// Starts from the 9th digit
-	// Divides the id by 10 in each step
-	int oddDigitsSum = 0;
-	int evenDigitsSum = 0;
-	for (long n = id / 100; n > 0; n /= 10) {
-	    oddDigitsSum += n % 10;
-	    n /= 10;
-	    evenDigitsSum += n % 10;
-	}
+        // Starts from the 9th digit
+        // Divides the id by 10 in each step
+        long oddDigitsSum = 0;
+        long evenDigitsSum = 0;
+        for (long n = id / 100; n > 0; n /= 10) {
+            oddDigitsSum += n % 10;
+            n /= 10;
+            evenDigitsSum += n % 10;
+        }
 
-	// Adding 100 for dismissing negative modulo antics
-	long tenthDigitCalculated = (7 * oddDigitsSum - evenDigitsSum + 100) % 10;
-	long eleventhDigitCalculated = (oddDigitsSum + evenDigitsSum + tenthDigitCalculated) % 10;
+        // Adding 100 for dismissing negative modulo antics
+        long tenthDigitCalculated = (7 * oddDigitsSum - evenDigitsSum + 100) % 10;
+        long eleventhDigitCalculated = (oddDigitsSum + evenDigitsSum + tenthDigitCalculated) % 10;
 
-	long tenthDigitActual = (id / 10) % 10;
-	long eleventhDigitActual = id % 10;
+        long tenthDigitActual = (id / 10) % 10;
+        long eleventhDigitActual = id % 10;
 
-	return tenthDigitCalculated == tenthDigitActual && eleventhDigitCalculated == eleventhDigitActual;
-    }
-
-    public static Citizen register(long nationalId, String name) {
-	return new Citizen(0L, nationalId, name, CitizenStatus.ACTIVE);
+        return tenthDigitCalculated == tenthDigitActual && eleventhDigitCalculated == eleventhDigitActual;
     }
 
 }

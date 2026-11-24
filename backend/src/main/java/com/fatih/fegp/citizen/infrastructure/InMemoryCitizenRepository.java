@@ -1,51 +1,40 @@
 package com.fatih.fegp.citizen.infrastructure;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-
+import com.fatih.fegp.citizen.domain.Citizen;
+import com.fatih.fegp.citizen.domain.CitizenErrors;
+import com.fatih.fegp.citizen.domain.CitizenRepository;
 import org.springframework.stereotype.Repository;
 
-import com.fatih.fegp.citizen.domain.Citizen;
-import com.fatih.fegp.citizen.domain.CitizenRepository;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
 public class InMemoryCitizenRepository implements CitizenRepository {
-    private final Map<Long, Citizen> byId = new ConcurrentHashMap();
-    private final Map<Long, Long> idByNationalId = new ConcurrentHashMap();
-    private final AtomicLong sequence = new AtomicLong(1);
-
-    @Override
-    public Citizen findById(long id) {
-	return byId.get(id);
-    }
-
-    @Override
-    public Citizen findByNationalId(long nationalId) {
-	long id = idByNationalId.get(nationalId);
-	return byId.get(id);
-    }
-
-    @Override
-    public boolean existsByNationalId(long nationalId) {
-	return idByNationalId.containsKey(nationalId);
-    }
+    private final Map<Long, Citizen> citizens = new ConcurrentHashMap<Long, Citizen>();
 
     @Override
     public Citizen save(Citizen citizen) {
-	if (citizen == null) {
-	    return null;
-	}
-	long id = 0;
-	if (citizen.getId() != 0) {
-	    id = citizen.getId();
-	} else {
-	    id = sequence.getAndIncrement();
-	}
-	Citizen saved = new Citizen(id, citizen.getNationalId(), citizen.getName(), citizen.getStatus());
-	byId.put(id, saved);
-	idByNationalId.put(saved.getNationalId(), id);
-	return saved;
+        if (citizen == null || !Citizen.validateCitizenId(citizen.getCitizenId())) {
+            throw new CitizenErrors.CitizenIllegalArgumentRegister();
+        }
+        citizens.put(citizen.getCitizenId(), citizen);
+        return citizen;
     }
 
+    @Override
+    public Citizen findByCitizenId(long citizenId) {
+        return citizens.get(citizenId);
+    }
+
+    @Override
+    public boolean existsByCitizenId(long citizenId) {
+        return citizens.containsKey(citizenId);
+    }
+
+    @Override
+    public Citizen removeByCitizenId(long citizenId) {
+        Citizen citizen = citizens.get(citizenId);
+        citizens.remove(citizenId);
+        return citizen;
+    }
 }
